@@ -2,8 +2,10 @@ module Main where
 
 import Control.Monad
 import Data.Char
+import qualified Data.Set as Set -- required install
+
 import System.IO
-import System.Random
+import System.Random -- required install
 
 randGen = mkStdGen 99
 
@@ -37,8 +39,6 @@ askUser = do
 
 data Color = Green | Yellow | Gray deriving (Show, Ord, Eq)
 
--- ok so what I want to do here is compare each letter in the guess with the entire answer
--- need the letter and its position
 checkOneCharacter :: Char -> Int -> String -> Color
 checkOneCharacter guess pos answer = case guess `elem` answer of
     True -> if guess == (answer !! pos) then Green else Yellow
@@ -59,13 +59,18 @@ formatGuess guess answer = "\ESC[107m" ++ formattedGuess ++ "\ESC[0m"
         formattedGuess = foldl (++) "" $ zipWith formatChar guess guessColors
         guessColors = checkWholeWord guess answer
 
+guessValid :: String -> Set.Set String -> Bool
+guessValid guess dictionary = (length guess == 5) && (all isAscii guess) && guess `Set.member` dictionary
+
 main :: IO ()
 main = do
     words <- preprocess $ getStandardWordList
+    let dictionary = Set.fromList words
     mapM putStrLn $ take 5 words
     let word = select randGen words
     putStrLn $ "The wordle of the day is " ++ word
     forever $ do
         guess <- askUser
-        putStrLn $ "You guessed " ++ guess
-        putStrLn $ "Formatted, that's " ++ (formatGuess guess word)
+        if not $ guessValid guess dictionary
+        then putStrLn $ "That's not a recognized 5-letter word. Please try again."
+        else putStrLn $ formatGuess guess word
