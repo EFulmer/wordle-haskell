@@ -29,18 +29,17 @@ getStandardWordList = do
 
 -- half the point of the `normalizeWords` and `filterWords` functions is so I can add more preprocessing in there later
 filterWords :: [String] -> [String]
-filterWords ss = filter (\w -> length w == 5) ss
+filterWords ss = filter (\s -> length s == 5 && all isAscii s) ss
 
 normalizeWords :: [String] -> [String]
 normalizeWords = map $ map toLower
 
 -- preprocess takes any list of words, so we don't need to assume anything or rely on the /usr/share/dict/words file.
 preprocess :: IO [String] -> IO [String]
-preprocess = liftM $ (filterWords .normalizeWords)
+preprocess = liftM $ (filterWords . normalizeWords)
 
 askUser :: IO String
 askUser = do
-    putStrLn "Guess a word "
     getLine
 
 checkOneCharacter :: Char -> Int -> String -> LetterMatch
@@ -85,7 +84,6 @@ playWordle answer dictionary roundsLeft
             then do
                 putStrLn "Good work!"
             else do
-                putStrLn $ "Try again. You have " ++ (show (roundsLeft - 1)) ++ " guesses left."
                 playWordle answer dictionary (roundsLeft - 1)
 
 main :: IO ()
