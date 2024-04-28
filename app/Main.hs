@@ -7,6 +7,14 @@ import qualified Data.Set as Set -- required install
 import System.IO
 import System.Random -- required install
 
+data Color = Green | Yellow | Gray deriving (Show, Ord, Eq)
+
+data LetterMatch = LetterMatch
+    { letter :: Char
+    , pos :: Int
+    , color :: Color
+    } deriving (Show)
+
 randGen = mkStdGen 99
 
 select :: StdGen -> [String] -> String
@@ -37,40 +45,55 @@ askUser = do
     putStrLn "Guess a word "
     getLine
 
-data Color = Green | Yellow | Gray deriving (Show, Ord, Eq)
+checkOneCharacter :: Char -> Int -> String -> LetterMatch
+checkOneCharacter guess pos answer
+    | answer !! pos == guess = LetterMatch { letter = guess, pos = pos, color = Green  }
+    | guess `elem` answer    = LetterMatch { letter = guess, pos = pos, color = Yellow }
+    | otherwise              = LetterMatch { letter = guess, pos = pos, color = Gray   }
 
-checkOneCharacter :: Char -> Int -> String -> Color
-checkOneCharacter guess pos answer = case guess `elem` answer of
-    True -> if guess == (answer !! pos) then Green else Yellow
-    False -> Gray
+checkWholeWord :: String -> String -> [LetterMatch]
+checkWholeWord guess answer = [ checkOneCharacter (guess !! i) i answer | i <- [0..4] ]
 
-checkWholeWord :: String -> String -> [Color]
-checkWholeWord guess answer = [checkOneCharacter (guess !! i) i answer | i <- [0..(length answer)-1] ]
+colorCode :: Color -> String
+colorCode Green  = "\ESC[42m"
+colorCode Yellow = "\ESC[43m"
+colorCode Gray   = "\ESC[100m"
 
-formatChar :: Char -> Color -> String
-formatChar ch Green = "\ESC[42m" ++ [ch]
-formatChar ch Yellow = "\ESC[43m" ++ [ch]
-formatChar ch Gray = "\ESC[100m" ++ [ch]
-
-formatGuess :: String -> String -> String
-formatGuess guess answer = "\ESC[107m" ++ formattedGuess ++ "\ESC[0m"
+formatHint :: [LetterMatch] -> String
+formatHint matches = join $ map formatOne matches
     where
-        -- gotta unnest the list of strings
-        formattedGuess = foldl (++) "" $ zipWith formatChar guess guessColors
-        guessColors = checkWholeWord guess answer
+        formatOne match = colorCode (color match) ++ [letter match]
+
+strHint :: [LetterMatch] -> String
+strHint matches = "\ESC[107m" ++ formatHint matches ++ "\ESC[0m"
 
 guessValid :: String -> Set.Set String -> Bool
 guessValid guess dictionary = (length guess == 5) && (all isAscii guess) && guess `Set.member` dictionary
+
+isCorrect :: [LetterMatch] -> Bool
+isCorrect matches = all (\match -> (color match) == Green) matches
+
+playWordle :: String -> Set.Set String -> Int -> IO ()
+playWordle answer dictionary roundsLeft
+    | roundsLeft == 0 = putStrLn "Sorry, you're out of guesses. The word was: " >> putStrLn answer
+    | otherwise = do
+        guess <- askUser
+        if not $ guessValid guess dictionary
+        then putStrLn "That's not a recognized 5-letter word. Please try again." >> playWordle answer dictionary roundsLeft
+        else do
+            let hint = checkWholeWord guess answer
+            putStrLn $ strHint hint
+            if isCorrect hint
+            then do
+                putStrLn "Good work!"
+            else do
+                putStrLn "Try again. You have " ++ (show roundsLeft - 1) ++ " guesses left."
+                playWordle answer dictionary (roundsLeft - 1)
 
 main :: IO ()
 main = do
     words <- preprocess $ getStandardWordList
     let dictionary = Set.fromList words
-    mapM putStrLn $ take 5 words
     let word = select randGen words
-    putStrLn $ "The wordle of the day is " ++ word
-    forever $ do
-        guess <- askUser
-        if not $ guessValid guess dictionary
-        then putStrLn $ "That's not a recognized 5-letter word. Please try again."
-        else putStrLn $ formatGuess guess word
+    putStrLn $ "DEBUG: The wordle of the day is " ++ word
+    playWordle word dictionary 6
