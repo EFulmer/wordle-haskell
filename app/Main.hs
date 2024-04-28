@@ -15,8 +15,6 @@ data LetterMatch = LetterMatch
     , color :: Color
     } deriving (Show)
 
-randGen = mkStdGen 99
-
 select :: StdGen -> [String] -> String
 select gen ss = ss !! x
     -- TODO: figure out how to keep the generator too
@@ -94,6 +92,6 @@ main :: IO ()
 main = do
     words <- preprocess $ getStandardWordList
     let dictionary = Set.fromList words
-    let word = select randGen words
-    putStrLn $ "DEBUG: The wordle of the day is " ++ word
+    rng <- getStdGen
+    let word = select rng words
     playWordle word dictionary 6
