@@ -87,7 +87,7 @@ playWordle answer dictionary roundsLeft
             then do
                 putStrLn "Good work!"
             else do
-                putStrLn "Try again. You have " ++ (show roundsLeft - 1) ++ " guesses left."
+                putStrLn $ "Try again. You have " ++ (show (roundsLeft - 1)) ++ " guesses left."
                 playWordle answer dictionary (roundsLeft - 1)
 
 main :: IO ()
