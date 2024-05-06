@@ -1,12 +1,13 @@
 wordle-haskell
 ==============
 
+![Image of a played Wordle game, in the terminal.](assets/gameplay_screenshot.png)
+
 Wordle clone in Haskell. Terminal-based!
 
 #### TO-DO
 
 * Makefile that builds, lints, installs dependencies, etc.
-* Examples of gameplay in README (screenshots)
 * Use `Text` data type instead of Haskell's built-in `String`
 * Switch from partial functions like `!!` to safe versions
 * Tests
