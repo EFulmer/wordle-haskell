@@ -75,7 +75,8 @@ executable wordle-haskell
         base ^>=4.17.2.1,
         ansi-terminal == 1.1.1,
         containers == 0.6.7,
-        random == 1.2.1.2
+        random == 1.2.1.2,
+        text == 2.0.2
 
     -- Directories containing source files.
     hs-source-dirs:   app
