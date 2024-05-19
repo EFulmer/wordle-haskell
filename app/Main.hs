@@ -6,6 +6,7 @@ import Data.Char
 import qualified Data.Set as Set -- required install
 import qualified Data.Text as T
 import qualified Data.Text.IO as T.IO
+import Numeric.Natural
 import System.Console.ANSI hiding (Color, Green, Yellow) -- required install
 import System.IO
 import System.Random -- required install
@@ -87,7 +88,7 @@ getChars = do
       return $ T.cons input rest
 
 -- Game loop
-playWordle :: T.Text -> Set.Set T.Text -> Int -> IO ()
+playWordle :: T.Text -> Set.Set T.Text -> Natural -> IO ()
 playWordle answer dictionary roundsLeft
   | roundsLeft == 0 = T.IO.putStrLn "Sorry, you're out of guesses. The word was: " >> T.IO.putStrLn answer >> T.IO.putStrLn "Play another game soon!"
   | otherwise = do
