@@ -20,11 +20,17 @@ data LetterMatch = LetterMatch
   }
   deriving (Show)
 
+atMay ::  [a] -> Int -> Maybe a
+atMay xs idx
+    | idx < 0 = Nothing
+    | idx > (length xs) = Nothing
+    | otherwise = Just $ xs !! idx
+
 -- Setup (get the word) functions
-select :: StdGen -> [T.Text] -> T.Text
-select gen ss = ss !! x
+-- select returns a Maybe for the one in a billion chance that we mess up the indexing
+select :: StdGen -> [T.Text] -> Maybe T.Text
+select gen ss = atMay ss x
   where
-    -- TODO: figure out how to keep the generator too
     (x, _) = randomR (0, n) gen
     n = length ss
 
@@ -120,4 +126,6 @@ main = do
   let dictionary = Set.fromList allPossibleWords
   rng <- getStdGen
   let word = select rng allPossibleWords
-  playWordle word dictionary 6
+  case word of
+    Just word' -> playWordle word' dictionary 6
+    Nothing -> putStrLn "There was an error getting the words. File a GitHub issue at https://github.com/EFulmer/wordle-haskell and I'll fix it!"
